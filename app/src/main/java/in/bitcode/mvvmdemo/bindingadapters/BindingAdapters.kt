@@ -7,8 +7,12 @@ import com.bumptech.glide.Glide
 @BindingAdapter("image_url")
 fun setWebImageUrlToImageView(
     imageView : ImageView,
-    imageUrl : String
+    imageUrl : String?
 ) {
+    if(imageUrl == null) {
+        return
+    }
+
     Glide.with(imageView)
         .load(imageUrl)
         .into(imageView)

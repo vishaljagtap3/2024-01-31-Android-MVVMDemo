@@ -3,12 +3,15 @@ package `in`.bitcode.mvvmdemo
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import `in`.bitcode.mvvmdemo.adapters.UsersAdapter
 import `in`.bitcode.mvvmdemo.databinding.ActivityMainBinding
+import `in`.bitcode.mvvmdemo.factory.MyViewModelFactory
+import `in`.bitcode.mvvmdemo.fragments.UserDetailsFragment
 import `in`.bitcode.mvvmdemo.models.UserModel
+import `in`.bitcode.mvvmdemo.network.UsersService
+import `in`.bitcode.mvvmdemo.repo.UsersRepo
 import `in`.bitcode.mvvmdemo.viewmodels.UsersViewModel
 
 class MainActivity : AppCompatActivity() {
@@ -23,8 +26,28 @@ class MainActivity : AppCompatActivity() {
         initViewModels()
         initAdapter()
         initObservers()
+        initListeners()
 
         usersViewModel.fetchUsers()
+    }
+
+    private fun initListeners() {
+        usersAdapter.onUserClickListener =
+            object : UsersAdapter.OnUserClickListener {
+                override fun onUserClick(user: UserModel, position: Int) {
+                    //Add user details fragment
+                    val userDetailsFragment = UserDetailsFragment()
+
+                    val input = Bundle()
+                    input.putInt("id", user.id)
+                    userDetailsFragment.arguments = input
+
+                    supportFragmentManager.beginTransaction()
+                        .add(R.id.mainContainer, userDetailsFragment, "userdetailsfragment")
+                        .addToBackStack(null)
+                        .commit()
+                }
+            }
     }
 
     private fun initObservers() {
@@ -55,7 +78,14 @@ class MainActivity : AppCompatActivity() {
         //this viewmodel object is not attached to activity
         //usersViewModel = UsersViewModel()
 
-        usersViewModel = ViewModelProvider(this)
+        usersViewModel = ViewModelProvider(
+            this,
+            MyViewModelFactory(
+                UsersRepo(
+                    UsersService.getInstance()
+                )
+            )
+        )
             .get(UsersViewModel::class.java)
     }
 
